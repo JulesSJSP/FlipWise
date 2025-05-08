@@ -8,10 +8,17 @@
 import SwiftUI
 
 @main
-struct FlipWiseApp: App {
+struct LoginApp: App {
+    @AppStorage("isLoggedIn") var isLoggedIn = false
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if isLoggedIn {
+                HomeView()
+            } else {
+                LoginView()
+            }
         }
     }
 }
+
