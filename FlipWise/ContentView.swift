@@ -55,7 +55,6 @@ class AuthManager: ObservableObject {
         if users[username] == password {
             UserDefaults.standard.set(true, forKey: "isLoggedIn")
             UserDefaults.standard.set(username, forKey: "currentUsername")
-            updateStreak()
             return true
         }
         return false
@@ -64,7 +63,6 @@ class AuthManager: ObservableObject {
     func register(username: String, password: String) -> Bool {
         var users = UserDefaults.standard.dictionary(forKey: "users") as? [String: String] ?? [:]
         if users[username] != nil {
-            // Gebruiker bestaat al
             return false
         }
         users[username] = password
@@ -76,141 +74,151 @@ class AuthManager: ObservableObject {
         UserDefaults.standard.set(false, forKey: "isLoggedIn")
         UserDefaults.standard.removeObject(forKey: "currentUsername")
     }
-
-    private func updateStreak() {
-        let today = Calendar.current.startOfDay(for: Date())
-        let lastDate = UserDefaults.standard.object(forKey: "lastLoginDate") as? Date ?? Date.distantPast
-        if Calendar.current.isDateInToday(lastDate) { return }
-
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
-        let currentStreak = UserDefaults.standard.integer(forKey: "streak")
-        if Calendar.current.isDate(lastDate, inSameDayAs: yesterday) {
-            UserDefaults.standard.set(currentStreak + 1, forKey: "streak")
-        } else {
-            UserDefaults.standard.set(1, forKey: "streak")
-        }
-        UserDefaults.standard.set(today, forKey: "lastLoginDate")
-    }
-}
-struct EditGameView: View {
-    @ObservedObject var gameManager: GameManager
-    @State var game: Game
-    @State private var newQuestion = ""
-    @State private var newAnswer = ""
-
-    var body: some View {
-        VStack {
-            TextField("Titel van spel", text: $game.title)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding(.bottom)
-
-            VStack {
-                TextField("Vraag", text: $newQuestion)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                TextField("Antwoord", text: $newAnswer)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                Button("➕ Voeg kaart toe") {
-                    guard !newQuestion.isEmpty && !newAnswer.isEmpty else { return }
-                    game.cards.append(Flashcard(question: newQuestion, answer: newAnswer))
-                    newQuestion = ""
-                    newAnswer = ""
-                }
-                .padding(.top, 5)
-            }
-
-            List(game.cards) { card in
-                VStack(alignment: .leading) {
-                    HStack {
-                        Text("Q: \(card.question)")
-                        Spacer()
-                        Button(action: {
-                            if let index = game.cards.firstIndex(where: { $0.id == card.id }) {
-                                game.cards.remove(at: index)
-                            }
-                        }) {
-                            Image(systemName: "trash.fill")
-                                .foregroundColor(.red)
-                        }
-                    }
-                    Text("A: \(card.answer)").foregroundColor(.gray)
-                    Button(action: {
-                        newQuestion = card.question
-                        newAnswer = card.answer
-                    }) {
-                        Text("Bewerk kaart")
-                            .foregroundColor(.blue)
-                    }
-                }
-            }
-
-            Button("✅ Opslaan") {
-                gameManager.saveGame(game)
-            }
-            .padding()
-            .background(Color(hex: "#ff5757"))
-            .foregroundColor(.white)
-            .cornerRadius(10)
-        }
-        .padding()
-        .navigationTitle("Bewerk spel")
-    }
 }
 
+// MARK: - SavedGamesView
 struct SavedGamesView: View {
     @ObservedObject var gameManager: GameManager
-
+    
+    private let columns = [
+        GridItem(.flexible(), spacing: 16),
+        GridItem(.flexible(), spacing: 16)
+    ]
+    
     var body: some View {
-        List(gameManager.games) { game in
-            HStack {
-                NavigationLink(destination: PlayGameView(game: game)) {
-                    Text(game.title)
+        NavigationView {
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(gameManager.games) { game in
+                        NavigationLink(destination: PlayGameView(game: game)
+                                        .navigationBarBackButtonHidden(true)) {
+                            VStack(spacing: 16) {
+                              
+                                Image(systemName: "gamecontroller.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(
+                                        Circle()
+                                            .fill(Color(hex: "#FF6F61"))
+                                            .frame(width: 70, height: 70)
+                                    )
+                                    .padding(.top, 8)
+                                
+                                Text(game.title)
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                    .padding(.horizontal)
+                                
+                                Text("\(game.cards.count) kaarten")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.bottom, 8)
+                            }
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.white)
+                                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+                            )
+                            .padding(.horizontal, 8)
+                        }
+                    }
                 }
-                
-                Spacer()
-                
-                NavigationLink(destination: EditGameView(gameManager: gameManager, game: game)) {
-                    Image(systemName: "pencil.circle.fill")
-                        .foregroundColor(.blue)
-                }
+                .padding()
             }
+            .navigationTitle("Opgeslagen spellen")
+            .navigationBarTitleDisplayMode(.inline)
+            .background(Color(.systemGray6).ignoresSafeArea())
         }
-        .navigationTitle("Opgeslagen spellen")
     }
 }
 
 // MARK: - PlayGameView
 struct PlayGameView: View {
     let game: Game
+    @State private var currentCardIndex = 0
     @State private var flipped: [UUID: Bool] = [:]
+    @State private var isGameCompleted = false
+    @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                ForEach(game.cards) { card in
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 15)
-                            .fill(Color(hex: "#ff5757"))
-                            .frame(height: 120)
-                            .overlay(
-                                Text(flipped[card.id] == true ? card.answer : card.question)
-                                    .foregroundColor(.white)
-                                    .font(.headline)
-                                    .multilineTextAlignment(.center)
-                                    .padding()
-                            )
-                            .onTapGesture {
-                                flipped[card.id]?.toggle()
-                            }
-                            .onAppear {
-                                flipped[card.id] = false
-                            }
-                            .animation(.easeInOut, value: flipped[card.id])
+        VStack {
+            Text(game.title)
+                .font(.largeTitle)
+                .bold()
+                .padding(.top)
+
+            Spacer()
+
+            ZStack {
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(Color(hex: "#ff5757"))
+                    .frame(height: 120)
+                    .overlay(
+                        Text(flipped[game.cards[currentCardIndex].id] == true ? game.cards[currentCardIndex].answer : game.cards[currentCardIndex].question)
+                            .foregroundColor(.white)
+                            .font(.headline)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                    )
+                    .onTapGesture {
+                        flipped[game.cards[currentCardIndex].id]?.toggle()
                     }
+                    .onAppear {
+                        flipped[game.cards[currentCardIndex].id] = false
+                    }
+                    .animation(.easeInOut, value: flipped[game.cards[currentCardIndex].id])
+            }
+
+            Spacer()
+
+            HStack {
+                Button(action: previousCard) {
+                    Image(systemName: "arrow.left.circle.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.gray)
+                }
+                .disabled(currentCardIndex == 0)
+
+                Spacer()
+
+                Button(action: nextCard) {
+                    Image(systemName: "arrow.right.circle.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.gray)
                 }
             }
             .padding()
+
         }
+        .padding()
         .navigationTitle(game.title)
+        .alert("Gefeliciteerd!", isPresented: $isGameCompleted) {
+            Button("OK") {
+                presentationMode.wrappedValue.dismiss()
+            }
+        } message: {
+            Text("Je hebt alle kaarten bekeken!")
+        }
+    }
+
+    private func previousCard() {
+        if currentCardIndex > 0 {
+            currentCardIndex -= 1
+            flipped[game.cards[currentCardIndex].id] = false
+        }
+    }
+
+    private func nextCard() {
+        if currentCardIndex < game.cards.count - 1 {
+            currentCardIndex += 1
+            flipped[game.cards[currentCardIndex].id] = false
+        } else {
+            isGameCompleted = true
+        }
     }
 }
 
@@ -218,7 +226,6 @@ struct PlayGameView: View {
 struct HomeView: View {
     @AppStorage("isLoggedIn") var isLoggedIn = false
     @State private var username = UserDefaults.standard.string(forKey: "currentUsername") ?? ""
-    @State private var streak = UserDefaults.standard.integer(forKey: "streak")
     @StateObject var gameManager = GameManager()
 
     var body: some View {
@@ -232,15 +239,6 @@ struct HomeView: View {
                         .font(.largeTitle.bold())
                         .foregroundColor(Color(hex: "#ff5757"))
                 }
-
-                HStack {
-                    Image(systemName: "flame.fill")
-                        .foregroundColor(.orange)
-                    Text("Streak: \(streak) dag(en)")
-                }
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
 
                 NavigationLink(destination: SavedGamesView(gameManager: gameManager)) {
                     Text("📚 Opgeslagen spellen")
@@ -453,6 +451,7 @@ struct RegisterView: View {
         .padding()
     }
 }
+
 #Preview {
     AppView()
 }

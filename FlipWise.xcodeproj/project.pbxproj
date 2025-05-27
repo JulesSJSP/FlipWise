@@ -11,7 +11,6 @@
 		E4399FCC2DCA287F0012192F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4399FCB2DCA287F0012192F /* ContentView.swift */; };
 		E4399FCE2DCA28800012192F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E4399FCD2DCA28800012192F /* Assets.xcassets */; };
 		E4399FD12DCA28800012192F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E4399FD02DCA28800012192F /* Preview Assets.xcassets */; };
-		E4399FD82DCA29B60012192F /* asdad.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4399FD72DCA29B60012192F /* asdad.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,7 +19,6 @@
 		E4399FCB2DCA287F0012192F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E4399FCD2DCA28800012192F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E4399FD02DCA28800012192F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		E4399FD72DCA29B60012192F /* asdad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = asdad.swift; path = ../../../../asdad.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,7 +53,6 @@
 			children = (
 				E4399FC92DCA287F0012192F /* FlipWiseApp.swift */,
 				E4399FCB2DCA287F0012192F /* ContentView.swift */,
-				E4399FD72DCA29B60012192F /* asdad.swift */,
 				E4399FCD2DCA28800012192F /* Assets.xcassets */,
 				E4399FCF2DCA28800012192F /* Preview Content */,
 			);
@@ -140,7 +137,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E4399FD82DCA29B60012192F /* asdad.swift in Sources */,
 				E4399FCC2DCA287F0012192F /* ContentView.swift in Sources */,
 				E4399FCA2DCA287F0012192F /* FlipWiseApp.swift in Sources */,
 			);
@@ -276,6 +272,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"FlipWise/Preview Content\"";
+				DEVELOPMENT_TEAM = 53Q89724DS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -304,6 +301,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"FlipWise/Preview Content\"";
+				DEVELOPMENT_TEAM = 53Q89724DS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
